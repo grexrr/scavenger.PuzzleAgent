@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify  
+from riddle_generator import RiddleGenerator
 
 app = Flask(__name__)
 
@@ -8,9 +9,11 @@ def generate_riddle():
     lm_id = data.get("landmarkId")
     print(f"[Python Flask] Received landmarkId: {lm_id}")
     
+    generator = RiddleGenerator()
+    generator.loadMetaFromDB(lm_id).generateRiddle()
     return jsonify({
         "status": "ok",
-        "riddle": lm_id # temporary testing
+        "riddle": generator.riddle # temporary testing
     })
 
 if __name__ == "__main__":
