@@ -142,7 +142,7 @@ This architecture supports future enhancements such as multilingual riddles, use
 
 * Created initial structure for an ELO-based rating system inside `EloCalculatorDemo.py`.
 
-> [!NOTE] Note
+> **Note**
 > This module serves as a testing sandbox for game balancing and numerical behavior visualization. The final production version will be fully integrated into the main Spring Boot application as part of the core game logic.
 
 * Implemented key methods to support adaptive difficulty evaluation:
