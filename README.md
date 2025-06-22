@@ -140,27 +140,32 @@ This architecture supports future enhancements such as multilingual riddles, use
 
 #### Scoring Layer – ELO Difficulty Modeling (Under Development)
 
-* Created initial structure for an ELO-based rating system inside `EloCalculatorDemo.py`.
+* Created initial prototype in `elo_calculator_demo.py` to simulate adaptive scoring based on player-landmark interaction.
 
 > **Note**
 > This module serves as a testing sandbox for game balancing and numerical behavior visualization. The final production version will be fully integrated into the main Spring Boot application as part of the core game logic.
 
-* Implemented key methods to support adaptive difficulty evaluation:
+* Implemented key components:
 
-  * `calculateElo(player, landmark)`: applies standard ELO update rule using custom performance score.
-  * `dynamicK()`: integrates uncertainty terms (U) into K-factor for both player and item.
-  * `updateUncertainty(current_U, days_since_last_play)`: increases uncertainty over time based on inactivity.
-  * `hshs(...)`: computes High-Speed High-Stakes score based on correctness and time used.
+  * `calculateElo(player, landmark, minutes_used, correct)`: updates rating for both player and landmark using modified ELO logic based on High-Speed High-Stakes (HSHS) scoring.
 
-* Designed for future integration with:
+  * `_dynamicK(player, landmark)`: computes K-factors using Glickman-style uncertainty terms (`U_player`, `U_landmark`).
 
-  * `PuzzleManager`: to influence target selection
-  * `EpistemicPlanner`: to refine difficulty prediction
+  * `_updateUncertainty(current_U, days_since_last_play)`: increases uncertainty over time; stabilizes with repeated play.
 
-#### Design Notes
+  * `_hshs(...)`: defines time-sensitive scoring function incorporating response correctness and time efficiency; computes expected score analytically using discrimination-adjusted logistic model.
 
-* Rating and uncertainty are intended to evolve over time per player-landmark interaction.
-* Scores and uncertainty values are clamped between `[0,1]` for interpretability.
-* Full integration with persistent user state and response logs is planned in later phases.
+* Notes:
+
+  * Initial ratings default to 10; uncertainty defaults to 0.5.
+  * All values are clamped to \[0,1] for stability and interpretability.
+  * Current implementation serves as testbed; not yet connected to main session state or database.
+
+* Planned integration:
+
+  * `PuzzleManager`: to support difficulty-based target selection.
+  * `EpistemicPlanner`: to leverage uncertainty in knowledge tracking and goal planning.
 
 ---
+
+
