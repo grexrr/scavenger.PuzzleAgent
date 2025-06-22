@@ -105,11 +105,59 @@ This module introduces a clean separation of concerns:
 
 This architecture supports future enhancements such as multilingual riddles, user-personalized difficulty, or caching of outputs.
 
-#### Next Steps
+---
 
-- Extend the API to support multiple styles or languages via request parameters
-- Add batch inference support for generating riddles for multiple landmarks at once
-- Write riddles back to MongoDB for caching and retrieval
-- Include optional reference fields (e.g. Wikipedia URL) in the response for explainability
-- Connect `/generate-riddle` endpoint to Java-side `PuzzleManager` for real-time gameplay use
-    
+### Jun. 14 2025
+
+#### Epistemic Layer – Initial Planning Integration
+
+* Introduced two foundational classes:
+
+  * `EpistemicStateManager`: models player knowledge by tracking solved landmark IDs and extracting semantic themes.
+  * `EpistemicPlanner`: evaluates the novelty of a landmark by comparing its metadata to the player’s known types and topics.
+
+* The planner returns a JSON object indicating:
+
+  * `difficulty`: (easy / medium / hard)
+  * `novelty_score`: continuous value between 0 and 1
+  * Optional `hint` for unfamiliar keywords
+
+* Current logic uses keyword overlap between landmark metadata and player history as a proxy for familiarity.
+
+* Discussed with supervisor the potential to integrate an **ELO-based difficulty control system**, where:
+
+  * Each landmark is assigned a difficulty rating.
+  * EpistemicPlanner can combine player state and ELO gap to estimate challenge level.
+
+#### Design Implication
+
+* Landmark difficulty should be **explicitly stored or inferred dynamically**.
+* Epistemic reasoning can then adaptively personalize riddles based on player proficiency and landmark complexity.
+
+---
+
+### Jun. 19 2025
+
+#### Scoring Layer – ELO Difficulty Modeling (Under Development)
+
+* Created initial structure for an ELO-based rating system inside `EloCalculatorDemo.py`.
+
+* Implemented key methods to support adaptive difficulty evaluation:
+
+  * `calculateElo(player, landmark)`: applies standard ELO update rule using custom performance score.
+  * `dynamicK()`: integrates uncertainty terms (U) into K-factor for both player and item.
+  * `updateUncertainty(current_U, days_since_last_play)`: increases uncertainty over time based on inactivity.
+  * `hshs(...)`: computes High-Speed High-Stakes score based on correctness and time used.
+
+* Designed for future integration with:
+
+  * `PuzzleManager`: to influence target selection
+  * `EpistemicPlanner`: to refine difficulty prediction
+
+#### Design Notes
+
+* Rating and uncertainty are intended to evolve over time per player-landmark interaction.
+* Scores and uncertainty values are clamped between `[0,1]` for interpretability.
+* Full integration with persistent user state and response logs is planned in later phases.
+
+---

@@ -20,6 +20,7 @@ class RiddleGenerator:
 
     def generateRiddle(self, language="English", style="medieval"):
         # LMSTUDIO GUI STYLE
+        ## Prompt format: https://www.llama.com/docs/model-cards-and-prompt-formats/meta-llama-3/
         template = r"""
         <|begin_of_text|><|start_header_id|>system<|end_header_id|>
         {system}
@@ -32,7 +33,7 @@ class RiddleGenerator:
         You are a master riddle writer. Writing only riddles for landmark in following format with no extra information nor specifying landmark name.
         \begin{{quote}}
         Written in {language}
-        Create a {style} riddle based on the information about {self.meta.get("name", "the landmark")}. Use the following details as context:
+        Create a {style} riddle based on the information about {self.meta.get("name", "the landmark")} in {self.meta.get("city", "the city")}. Use the following details as context:
 
         \textbf{{History}}: Highlight significant events or periods related to the landmark.
         \textbf{{Architecture}}: Mention unique structural or design features, pay attention to color
