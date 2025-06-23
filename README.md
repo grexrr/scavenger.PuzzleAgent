@@ -243,11 +243,11 @@ Uncertainty control (frozen uncertainty) and dynamic K-factor remain fixed to is
 
 ![Benchmark Test 1: 10 Minutes](./figure/Convergence%20under%20Different%20Time%20Used.png)
 
-$$$\Delta r = K \cdot \left[ \underbrace{\text{HSHS}(t)}_{\text{Time-performance factor}} - \underbrace{E(HSHS)}_{\text{Expectation based on rating gap}} \right]$$$
+$\Delta r = K \cdot \left[ \underbrace{\text{HSHS}(t)}_{\text{Time-performance factor}} - \underbrace{E(HSHS)}_{\text{Expectation based on rating gap}} \right]$
 
 When `t_used` is **fixed** (e.g. always 29 minutes), then $HSHS_t$ is a constant:
 
-If the player continues to solve correctly => $E_{HSHS} \rightarrow HSHS$ → $\Delta r \rightarrow 0$,  
+If the player continues to solve correctly => $E_{HSHS} \rightarrow HSHS$ => $\Delta r \rightarrow 0$,  
 meaning the system has converged and rating changes stabilize.
 
 **Conclusion:**  
