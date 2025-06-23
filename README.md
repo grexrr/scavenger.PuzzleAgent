@@ -210,7 +210,6 @@ This setup introduces a **skill gap**, requiring the player to improve to match 
 3. **Numerical Stability**: Ensure updates do not cause abnormal fluctuations  
 4. **HSHS Model Validation**: Test correctness of the time-sensitive rating function
 
----
 
 ##### Test Results
 
@@ -224,7 +223,6 @@ Even though the initial skill gap was 3.0 (-1.5 ↔ +1.5), the system quickly pu
 - Per-game rating gain: around +0.03 internal rating (~ +0.3 visible points) in the first 20 rounds, then gradually slows down.  
 To accelerate early learning, consider increasing `K` to ~0.015–0.02.
 
----
 
 #### Second Round Test
 
@@ -240,20 +238,17 @@ CORRECT = True
 
 Uncertainty control (frozen uncertainty) and dynamic K-factor remain fixed to isolate time effects.
 
----
 
 ##### Test Results
 
 ![Benchmark Test 1: 10 Minutes](./figure/Convergence%20under%20Different%20Time%20Used.png)
 
-$$\Delta r = K \cdot \left[ \underbrace{\text{HSHS}(t)}_{\text{Time-performance factor}} - \underbrace{E(HSHS)}_{\text{Expectation based on rating gap}} \right]$$
+$$$\Delta r = K \cdot \left[ \underbrace{\text{HSHS}(t)}_{\text{Time-performance factor}} - \underbrace{E(HSHS)}_{\text{Expectation based on rating gap}} \right]$$$
 
 When `t_used` is **fixed** (e.g. always 29 minutes), then $HSHS_t$ is a constant:
 
-If the player continues to solve correctly → $E_{HSHS}$ approaches $HSHS$ → $\Delta r$ tends to 0,  
+If the player continues to solve correctly => $E_{HSHS} \rightarrow HSHS$ → $\Delta r \rightarrow 0$,  
 meaning the system has converged and rating changes stabilize.
-
----
 
 **Conclusion:**  
 Time mainly controls the **magnitude of Δr** (convergence speed), **not** the final rating limit.  
