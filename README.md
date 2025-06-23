@@ -168,4 +168,67 @@ This architecture supports future enhancements such as multilingual riddles, use
 
 ---
 
+### Jun. 23 2025
+
+(数值设计)
+
+#### 第一轮测试
+
+##### Core Test Parameters
+
+```python
+ITERATIONS = 1000          # 迭代次数 - 足够观察收敛性
+TIME_LIMIT_MINUTES = 30             # 实际用时 (分钟) - 中等难度表现
+TIME_USED_CASES  = 10              # 时间限制 (分钟) - 合理的游戏时长
+BENCHMARK_UNCERTAINTY = 0.5  # 不确定性基准值 - Glicko/CAP模型标准
+CORRECT = True
+```
+
+##### Initial Rating Setup
+
+```python
+testPlayer1.rating = -1.5    # 玩家初始评分 - 收敛值最低值
+testLandmark1.rating = 1.5   # 地标初始评分 - 收敛值最高值
+```
+这个设置创造了一个**技能差距 (skill gap)**，玩家需要提升才能匹配地标难度。
+
+##### Test Logic Design
+
+- **目标**: 验证在重复正确回答下，玩家和地标的评分是否收敛到合理范围
+- **方法**: 固定 `correct=True`，模拟玩家持续成功的情况
+- **预期**: 玩家评分应该上升，地标评分应该下降，最终达到平衡
+
+##### Test Objectives
+
+1. **验证收敛性 (Convergence Verification)**: 确保评分系统在重复交互后达到稳定状态
+2. **平衡性检查 (Balance Check)**: 验证玩家和地标评分的相对变化是否合理
+3. **数值稳定性 (Numerical Stability)**: 确保评分更新不会出现异常波动
+4. **HSHS 模型验证 (HSHS Model Validation)**: 测试时间敏感评分函数的正确性
+
+##### Test Results
+
+![Benchmark Test 1: 10 Minutes](./figure/Convergence%20with%20Repeated%20Correct%20Answers.png)
+
+**以下观察基于在解题上限为30分钟时，解题时间为10分钟时为前提条件**
+
+- 收敛点：≈ ±1.48 → 可见层约 64.8 分 / 35.2 分
+即便 skill gap 初始为 3（-1.5 ↔ +1.5），系统很快把玩家抬到题目“可解区间”。
+
+-单局涨幅：前 20 局每局约 +0.03 内部分（≈ +0.3 可见分），之后逐渐变缓；
+若想再加快前期学习，可把 K 调到 ~0.015-0.02。
+
+
+#### 第二轮测试
+
+根据上述条件，调整变量（）以观察数据波动
+
+```python
+ITERATIONS = 1000
+TIME_LIMIT_MINUTES = 30                     # minutes   
+BENCHMARK_UNCERTAINTY = 0.5                 # Glicko / CAP model uncertainty benchmark values
+TIME_USED_CASES    = [0.1, 10, 20, 29.9]    # 测试不同解题时间下的rating收敛情况
+CORRECT = True
+```
+
+
 

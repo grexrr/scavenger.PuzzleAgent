@@ -1,27 +1,26 @@
 import math
 
 class testPlayer():
-    def __init__(self, playerId,  lastPlay, uncertainty=0.5) -> None:
+    def __init__(self, playerId, rating, lastPlay, uncertainty=0.5) -> None:
         self.playerId = playerId
-        self.rating = 10 # placeholder, not sure
+        self.rating = rating # placeholder, not sure
         self.uncertainty = uncertainty
         self.lastPlayed = lastPlay
 
 class testLandmark():
-    def __init__(self, landmarkId, lastAnswered, uncertainty=0.5) -> None:
+    def __init__(self, landmarkId, rating, lastAnswered, uncertainty=0.5) -> None:
         self.landmarkId = landmarkId
-        self.rating = 10 # placeholder, not sure
+        self.rating = rating # placeholder, not sure
         self.uncertainty = uncertainty
         self.lastAnswered = lastAnswered
 
 
 class testEloCalculator():
-
     def __init__(self, players, landmarks) -> None:
         self.players = players
         self.landmarks = landmarks
 
-    def calculateElo(self, player:testPlayer, landmark:testLandmark, minutes_used, time_limit_minutes=20, correct=True):
+    def calculateElo(self, player:testPlayer, landmark:testLandmark, minutes_used, time_limit_minutes=20, correct=True, test_mode=True):
         """sumary_line
         
         q^_player = q_player + K_player(S_hshs - E(S_hshs))
@@ -33,7 +32,7 @@ class testEloCalculator():
         """
         
     
-        K_player, K_riddle = self._dynamicK(player, landmark)
+        K_player, K_riddle = self._dynamicK(player, landmark, test_mode)
         hshs, expectation = self._hshs(minutes_used *  60, player.rating, landmark.rating, time_limit_minutes * 60, correct)
 
         player.rating += K_player * (hshs - expectation)
@@ -126,7 +125,7 @@ class testEloCalculator():
     def _discrimination(self, time_limit, mode="default"):   
         
         """
-        Allowing mode="default" and fallback 1/10, expandable for future work like “different judgement rate for different riddle types”
+        Allowing mode="default" and fallback 1/10, expandable for future work like "different judgement rate for different riddle types"
         """
         
         return 1.0/time_limit if mode == "default" else 1/10
@@ -142,4 +141,61 @@ class testEloCalculator():
 
 
 if __name__ == "__main__":
-    print("hello world")
+
+    import matplotlib.pyplot as plt
+     
+    ### TEST 1 BENCHMARK
+    
+    ITERATIONS = 1000
+    TIME_LIMIT_MINUTES = 30 # minutes   
+    BENCHMARK_UNCERTAINTY = 0.5 # Glicko / CAP model uncertainty benchmark values
+    TIME_USED_CASES    = [0.1, 10, 20, 29.9]
+    CORRECT = True
+
+    testPlayer1 = testPlayer("P1", rating=-1.5, lastPlay=None, uncertainty=BENCHMARK_UNCERTAINTY)
+    testLandmark1 = testLandmark("L1", rating=1.5, lastAnswered=None, uncertainty=BENCHMARK_UNCERTAINTY)
+    calculator = testEloCalculator([testPlayer1], [testLandmark1])
+
+    results = []
+
+    # ---- TESTING ----
+    for minutes_used in TIME_USED_CASES:
+        player   = testPlayer("P1", rating=-1.5, lastPlay=None, uncertainty=BENCHMARK_UNCERTAINTY)
+        landmark = testLandmark("L1", rating= 1.5, lastAnswered=None, uncertainty=BENCHMARK_UNCERTAINTY)
+        calc     = testEloCalculator([player], [landmark])
+
+        p_hist, l_hist = [], []
+        for _ in range(ITERATIONS):
+            calc.calculateElo(player, landmark,
+                            minutes_used=minutes_used,
+                            time_limit_minutes=TIME_LIMIT_MINUTES,
+                            correct=CORRECT,
+                            test_mode=True)
+            p_hist.append(player.rating)
+            l_hist.append(landmark.rating)
+        results.append((p_hist, l_hist, minutes_used))
+
+    # ---- PLOT ----
+    fig, axs = plt.subplots(len(TIME_USED_CASES), 1, figsize=(10, 12), sharex=True)
+
+    for idx, (p_hist, l_hist, minutes_used) in enumerate(results):
+        x_data = list(range(len(p_hist)))
+        axs[idx].plot(x_data, p_hist, label="Player", color="royalblue", linewidth=2)
+        axs[idx].plot(x_data, l_hist, label="Puzzle", color="darkorange", linewidth=2)
+        axs[idx].set_title(f"minutes_used = {minutes_used} min", fontsize=13)
+        axs[idx].set_ylabel("Internal rating (±2)")
+        axs[idx].grid(True, linestyle='--', alpha=0.5)
+        axs[idx].legend(loc="lower right")
+        axs[idx].tick_params(axis='x', which='both', labelbottom=True)
+
+    axs[-1].set_xlabel("Iteration")
+    plt.suptitle("Convergence under Different Time Used", fontsize=16)
+    plt.tight_layout(rect=[0, 0, 1, 0.97])
+    plt.savefig("Convergence under Different Time Used.png", dpi=300, bbox_inches='tight')
+    plt.show()
+
+   
+
+
+    
+    
