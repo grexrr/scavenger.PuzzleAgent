@@ -193,7 +193,6 @@ testLandmark1.rating = 1.5      # Initial landmark rating – highest convergenc
 
 This setup introduces a **skill gap**, requiring the player to improve to match the challenge level.
 
----
 
 ##### Test Logic Design
 
@@ -201,7 +200,6 @@ This setup introduces a **skill gap**, requiring the player to improve to match 
 - **Method**: Fix `correct=True` to simulate consistent player success  
 - **Expected**: Player rating should increase, landmark rating should decrease, eventually reaching balance
 
----
 
 ##### Test Objectives
 
