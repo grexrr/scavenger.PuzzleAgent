@@ -5,12 +5,16 @@ app = Flask(__name__)
 
 @app.route("/generate-riddle", methods=["POST"])
 def generate_riddle():
+    language = "English"
+    style = "Medieval"
     data = request.get_json()
     lm_id = data.get("landmarkId")
-    print(f"[Python Flask] Received landmarkId: {lm_id}")
+    difficulty = data.get("difficulty")
+    print(f"[Python Flask] Received landmarkId {lm_id}: difficulty {difficulty}.")
+
     
-    generator = RiddleGenerator()
-    generator.loadMetaFromDB(lm_id).generateRiddle()
+    generator = RiddleGenerator(model="chatgpt")
+    generator.loadMetaFromDB(lm_id).generateRiddle(language, style, difficulty)
     return jsonify({
         "status": "ok",
         "riddle": generator.riddle # temporary testing
