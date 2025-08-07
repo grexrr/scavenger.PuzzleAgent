@@ -104,29 +104,28 @@ class RiddleGenerator:
         except (ValueError, TypeError):
             difficulty = 50.0  
             print("[PuzzleAgent]: Invalid difficulty input, defaulting to 50.0")
-
-
-        system_prompt = f"""
-            You are a master riddle writer. Writing only riddles for landmark in following format with no extra information nor specifying landmark name.
-            \begin{{quote}}
-            Written in {language}
-            Create a {style} riddle based on the information about {self.meta.get("name", "the landmark")} in {self.meta.get("city", "the city")}. Use the following details as context:
-
-            \textbf{{History}}: Highlight significant events or periods related to the landmark.
-            \textbf{{Architecture}}: Mention unique structural or design features, pay attention to color
-            \textbf{{Significance}}: Emphasize its cultural, religious, or social importance.
-            \textbf{{Length}}: No more than 5 lines.
-            The riddle should be concise, engaging, and reflect a {style}.
-            \end{{quote}}
-            """
         
         if difficulty < 33.3:
-            print("easy prompt")
+            diff_prompt = "Write a simple and clear riddle suitable for beginners or young audiences (around 10 years old)."
         elif difficulty < 66.6:
-            print("medium prompt")
+            diff_prompt = "Write a moderately challenging riddle with some use of rhetorical devices, but still solvable based on the context."
         else:
-            print("difficult prompt")
+            diff_prompt = "Write a challenging and abstract riddle that relies on metaphor and indirect clues, avoiding clear landmark descriptions."
 
+        system_prompt = f"""
+            Written in {language}. You are a master riddle writer. {diff_prompt} Do not include any extra explanations or mention the landmark's name explicitly.
+            
+            Use the following details as reference:
+            \\begin{{quote}}
+            \\textbf{{History}}: Highlight significant events or periods related to the landmark.
+            \\textbf{{Architecture}}: Mention unique structural or design features, pay attention to color
+            \\textbf{{Significance}}: Emphasize its cultural, religious, or social importance.
+            \\textbf{{Length}}: No more than 5 lines.
+            The riddle should be concise, engaging, and reflect a {style}.
+            \\end{{quote}}
+
+            Create a {style} riddle based on the information about {self.meta.get("name", "the landmark")} in {self.meta.get("city", "the city")}. 
+            """
         return system_prompt
 
     def saveToFile(self, filename):

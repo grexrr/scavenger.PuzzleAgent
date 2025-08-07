@@ -5,11 +5,13 @@ app = Flask(__name__)
 
 @app.route("/generate-riddle", methods=["POST"])
 def generate_riddle():
-    language = "English"
-    style = "Medieval"
     data = request.get_json()
+    
+    language = data.get("language", "English")
+    style = data.get("style", "Medieval")
     lm_id = data.get("landmarkId")
     difficulty = data.get("difficulty")
+    
     print(f"[Python Flask] Received landmarkId {lm_id}: difficulty {difficulty}.")
 
     
