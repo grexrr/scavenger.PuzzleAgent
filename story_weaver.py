@@ -14,9 +14,12 @@ class StoryWeaver:
         #     ]
         # }
 
+        if session_id and session_id in self.sessions:
+            return session_id
+        
         if not session_id:
             session_id = str(uuid.uuid4())
-            
+
         state = {
             "total_slots": len(puzzle_pool),
             "slot_index": 0,
@@ -32,6 +35,12 @@ class StoryWeaver:
         
         state = self.sessions[session_id]
         slot_index = state["slot_index"]
+        if slot_index >= len(state["puzzle_pool"]):
+            return {
+                "session_id": session_id,
+                "error": "No more riddles available in this session."
+            }
+        
         beat_tag = state["beat_plan"][slot_index]
 
         prev_summary = self._format_previous_riddles(state["riddle_history"])

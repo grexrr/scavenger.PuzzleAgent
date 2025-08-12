@@ -26,13 +26,13 @@ story_weaver = StoryWeaver()
 def generate_riddle():
     data = request.get_json()
     
-    session_id = data.get("session_id")       # backend not sent yet
+    session_id = data.get("session_id")        # backend not sent yet
     language = data.get("language", "English")
     style = data.get("style", "Medieval")
     difficulty = data.get("difficulty")
-    puzzle_pool = data.get("puzzle_pool", []) # backend not sent yet
+    puzzle_pool = data.get("puzzle_pool", [])  # backend not sent yet
     
-    session_id = story_weaver.start_episode(
+    story_weaver.start_episode(
         puzzle_pool=puzzle_pool, 
         session_id=session_id
     )
