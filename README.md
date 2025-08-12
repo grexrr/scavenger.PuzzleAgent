@@ -364,7 +364,7 @@ What is this beacon by the college green?
 
 **Answer**: Glucksman Gallery
 
-##### **Round 2**
+---
 
 **Beat Tag**: development
 **Riddle**:
@@ -379,7 +379,7 @@ Built not from tithe but from a maiden's grace.
 
 **Answer**: Honan Collegiate Chapel
 
-##### **Round 3**
+---
 
 **Beat Tag**: ending
 **Riddle**:
@@ -396,7 +396,7 @@ Behold, where history and learning wed.
 
 ---
 
-#### **Step 5 – Observations**
+**Observations**
 
 * 三题顺序正确，但故事上下文衔接感不强
 * 需要增强 prompt 对 “承接前文、推进情节” 的引导
@@ -406,3 +406,80 @@ Behold, where history and learning wed.
   * beat\_tag 对应的叙事补充说明
   * 上一题重要元素（link\_to）
 
+好的，我帮你按你的要求整理 **Round 2** 内容，先写本轮的代码更改，再附上刚刚那组谜题，格式保持分级一致：
+
+---
+
+##### **Round 2**
+
+**代码更改**
+
+* 在 `serve_riddle()` 中新增 `story_context` 构造逻辑，包含：
+
+  * **全局 story seed**（`state['story_seed']`）
+  * **beat\_tag 对应叙事功能说明**（opening / development / ending）
+  * 明确要求“使用当前地标的特征进行全新描写”以避免重复用词
+  * 保留 `Previous riddles` 摘要用于上下文承接
+* 在 `_generateSystemPrompt()` 中直接使用传入的 `story_context`，去掉冗余 `context_prompt` 变量，确保 narrative arc 信息集中在一个地方维护
+* 这样第一条谜语会引入主线任务，后续谜语会引用并推进任务情节，同时保持用词和 imagery 的新鲜感
+
+---
+
+**Beat Tag**: opening
+**Riddle**:
+
+```
+In a land where saints and scholars once did dwell,
+A chapel stands, her tales of faith to tell.
+With walls enrobed in Celtic art's embrace,
+Her glass stained windows saints in light do trace.
+Built not from tithe but from a maiden's grace.
+```
+
+**Answer**: Glucksman Gallery
+
+---
+
+**Beat Tag**: development
+**Riddle**:
+
+```
+Beneath the gaze of saints in glass arrayed,
+Where Celtic knots and Romanesque embrace,
+The mosaic floor, with zodiac displayed,
+Holds the next clue, a celestial trace.
+Seek where the sun meets stars in morning's grace.
+```
+
+**Answer**: Honan Collegiate Chapel
+
+---
+
+**Beat Tag**: ending
+**Riddle**:
+
+```
+In spires that pierce the sky with Gothic grace,
+Where limestone towers guard learned lore's place,
+Beneath arches pointed as scholars' thought,
+Here lies the relic, by keen minds long sought.
+In halls of echoes, past whispers the truth.
+```
+
+**Answer**: The Quad / Aula Maxima
+
+**Observations**
+
+三题顺序与 beat_tag 匹配，剧情结构符合 opening → development → ending 节奏
+
+连续性较之前提升：三条谜语都围绕同一类背景（学术、艺术、信仰）展开，并保持一致的故事氛围
+
+用词多样化，没有生硬重复前一题的措辞，但核心意象（知识、信仰、艺术）得以保留
+
+仍可进一步优化：
+
+在 opening 中直接埋下“任务起因”或“核心物件”增加悬念
+
+在 development 中引入剧情转折或意外线索，增加张力
+
+在 ending 中明确揭示任务结局，增强完成感

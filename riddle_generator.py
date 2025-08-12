@@ -99,10 +99,10 @@ class RiddleGenerator:
     
     def _generateSystemPrompt(self, language="English", style="Medieval", difficulty=50, story_context=None):
         
-        if isinstance(story_context, str) and story_context.strip():
-            context_prompt = f" following the ongoing story context: {story_context.strip()}"
-        else:
-            context_prompt = "."
+        # if isinstance(story_context, str) and story_context.strip():
+        #     pass
+        # else:
+        #     context_prompt = " This is the opening of the story."
 
         try:
             difficulty = float(difficulty)
@@ -117,8 +117,12 @@ class RiddleGenerator:
         else:
             diff_prompt = "Write a challenging and abstract riddle that relies on metaphor and indirect clues, avoiding clear landmark descriptions"
 
+        
+
         system_prompt = f"""
-            Written in {language}. You are a master riddle writer. {diff_prompt} {context_prompt}. Do not include any extra explanations or mention the landmark's name explicitly.
+            Written in {language}. You are a master riddle writer. {diff_prompt} 
+            {story_context if story_context else "This is the opening of the story."}
+            Do not include any extra explanations or mention the landmark's name explicitly.
             
             Use the following details as reference:
             \\begin{{quote}}

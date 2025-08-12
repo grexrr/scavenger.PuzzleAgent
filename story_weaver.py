@@ -14,24 +14,30 @@ class StoryWeaver:
         #     ]
         # }
 
-        if session_id and session_id in self.sessions:
+        if not session_id:
+            raise ValueError("sessionId required but missing")
+        
+        if session_id in self.sessions:
             return session_id
         
-        if not session_id:
-            session_id = str(uuid.uuid4())
+        if not puzzle_pool:
+            raise ValueError("puzzlePool required for first-time sessionId")
+        
+        story_seed = "A hidden relic lost, must be found by following clues hidden in the city's art, faith, and learning."
 
         state = {
             "total_slots": len(puzzle_pool),
             "slot_index": 0,
             "beat_plan": self._generate_beat_plan(len(puzzle_pool)),
             "riddle_history": [],
-            "puzzle_pool": puzzle_pool
+            "puzzle_pool": puzzle_pool,
+            "story_seed": story_seed
         }
         self.sessions[session_id] = state
         
         return session_id
     
-    def serve_riddle(self, language, style, difficulty, session_id=None):
+    def serve_riddle(self, language, style, difficulty, landmark_id, session_id=None):
         
         state = self.sessions[session_id]
         slot_index = state["slot_index"]
@@ -44,11 +50,24 @@ class StoryWeaver:
         beat_tag = state["beat_plan"][slot_index]
 
         prev_summary = self._format_previous_riddles(state["riddle_history"])
-        story_context = f"Current story beat: {beat_tag}\nPrevious riddles: \n{prev_summary}"
-        lmid = state["puzzle_pool"][slot_index]
+        # story_context = f"Current story beat: {beat_tag}\nPrevious riddles: \n{prev_summary}"
+        
+        beat_instructions = {
+            "opening": "Introduce the main quest, protagonist, and first clue.",
+            "development": "Reveal a new clue and expand the mystery, building on previous events.",
+            "ending": "Resolve the quest by revealing the final truth or location."
+        }
+
+        story_context = (
+            f"This is the {beat_tag} of a connected {len(state['puzzle_pool'])}-part story. "
+            f"The overarching quest: {state['story_seed']} "
+            f"{beat_instructions.get(beat_tag, '')} "
+            f"This riddle must progress the story, but use fresh imagery and vocabulary that fit the current landmark's features. "
+            f"Previous riddles (in order):\n{prev_summary}"
+        )
         
         riddle_generator = RiddleGenerator(model="chatgpt")
-        riddle_generator.loadMetaFromDB(lmid).generateRiddle(
+        riddle_generator.loadMetaFromDB(landmark_id).generateRiddle(
             language=language,
             style=style,
             difficulty=difficulty, #placeholder
