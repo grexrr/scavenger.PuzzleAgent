@@ -252,4 +252,157 @@ meaning the system has converged and rating changes stabilize.
 Time mainly controls the **magnitude of Δr** (convergence speed), **not** the final rating limit.  
 CAP or similar mechanisms may be necessary to handle extreme cases.
 
+---
+
+### Aug. 11 2025
+
+
+#### **Step 1 – Extend RiddleGenerator with story\_context Support**
+
+**Objective**: 让生成器能接收 `story_context`（包含 beat\_tag 和 previous\_riddles）并在 prompt 中使用。
+
+**Current State**:
+
+* `generateRiddle()` 已经支持 `story_context` 参数：
+
+```python
+def generateRiddle(self, language="English", style="medieval", difficulty=50, story_context=None):
+```
+
+* `_generateSystemPrompt()` 已加入：
+
+```python
+if isinstance(story_context, str) and story_context.strip():
+    context_prompt = f" following the ongoing story context: {story_context.strip()}"
+else:
+    context_prompt = "."
+```
+
+* backward-compatible：`story_context` 为 None 时，走原始逻辑。
+
+**Next Action**:
+
+* 增强 story\_context 的 prompt 引导性（明确要求承接前文、推进情节）。
+
+---
+
+#### **Step 2 – Implement StoryWeaver as Session Manager**
+
+**Objective**: 管理一局游戏的多谜语故事进度，内部维护上下文，API 保持单一 `/generate-riddle`。
+
+**Current State**:
+
+* 内存结构：
+
+```python
+self.sessions[session_id] = {
+    "total_slots": len(puzzle_pool),
+    "slot_index": 0,
+    "beat_plan": [...],
+    "riddle_history": [],
+    "puzzle_pool": puzzle_pool
+}
+```
+
+* `start_episode()`：
+
+  * 若 `session_id` 不存在 → 新建
+  * 若存在 → 复用
+  * 返回 `session_id`
+* `serve_riddle()`：
+
+  * 取当前 beat\_tag 和 previous\_riddles
+  * 生成 story\_context（自然语言）
+  * 调 `RiddleGenerator.generateRiddle()`
+  * 保存到 riddle\_history，slot\_index++
+
+
+#### **Step 3 – API Integration**
+
+**Objective**: 用一个 `/generate-riddle` 接口完成新局 & 续局逻辑。
+
+**Current State**:
+
+```python
+@app.route("/generate-riddle", methods=["POST"])
+def generate_riddle():
+    session_id = story_weaver.start_episode(puzzle_pool, session_id_from_client)
+    riddle_info = story_weaver.serve_riddle(language, style, difficulty, session_id)
+    return jsonify({
+        "status": "ok",
+        "session_id": session_id,
+        "riddle": riddle_info["riddle"]
+    })
+```
+
+* 第一次调用传 `puzzle_pool`（可含多个 landmarkId），返回第一题 + `session_id`
+* 后续调用仅传 `session_id` → StoryWeaver 自动生成下一题
+
+
+#### **Step 4 – Testing & Validation**
+
+**Test Sequence with 3 Landmark IDs**:
+
+```
+686fe2fd5513908b37be306d  → Glucksman Gallery
+686fe2fd5513908b37be306f  → Honan Collegiate Chapel
+686fe2fd5513908b37be3071  → The Quad / Aula Maxima
+```
+
+##### **Round 1**
+
+**Beat Tag**: opening
+**Riddle**:
+
+```
+In a land where scholars tread, a fortress of art stands proud and wed,
+By architects' hands, it claimed its fame, with awards and honors to its name.
+Thrice-leveled tower, cloaked in praise, where modern muses spend their days.
+Baptized by a president, its walls have seen, floods and closures, yet its spirit's keen.
+What is this beacon by the college green?
+```
+
+**Answer**: Glucksman Gallery
+
+##### **Round 2**
+
+**Beat Tag**: development
+**Riddle**:
+
+```
+In a land where saints and scholars once did dwell,
+A chapel stands, her tales of faith to tell.
+With walls enrobed in Celtic art's embrace,
+Her glass stained windows saints in light do trace.
+Built not from tithe but from a maiden's grace.
+```
+
+**Answer**: Honan Collegiate Chapel
+
+##### **Round 3**
+
+**Beat Tag**: ending
+**Riddle**:
+
+```
+In a realm where wisdom's flame is fed,
+A Gothic guardian stands, its spires point high;
+Limestone bones clad in academic pride,
+Where scholars gather, and young minds are led.
+Behold, where history and learning wed.
+```
+
+**Answer**: The Quad / Aula Maxima
+
+---
+
+#### **Step 5 – Observations**
+
+* 三题顺序正确，但故事上下文衔接感不强
+* 需要增强 prompt 对 “承接前文、推进情节” 的引导
+* 未来可在 story\_context 中加入：
+
+  * 全局 motif
+  * beat\_tag 对应的叙事补充说明
+  * 上一题重要元素（link\_to）
 

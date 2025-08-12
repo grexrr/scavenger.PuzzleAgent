@@ -32,7 +32,7 @@ class RiddleGenerator:
             self.meta["_id"] = str(self.meta["_id"])  # convert ObjectID to string
         return self
 
-    def generateRiddle(self, language="English", style="medieval", difficulty=50):
+    def generateRiddle(self, language="English", style="medieval", difficulty=50, story_context=None):
 
         # ========== basic info collection ==========   
         meta = self.meta.get("meta", {})
@@ -56,7 +56,7 @@ class RiddleGenerator:
         
         # ========== prompt based on difficulty ==========   
         user_prompt = "\n".join(filter(None, [history_str, architecture_str, significance_str, reference]))
-        system_prompt = self._generateSystemPrompt(language, style, difficulty) 
+        system_prompt = self._generateSystemPrompt(language, style, difficulty, story_context) 
         
         # ========== response based on model selection ==========   
         
@@ -97,7 +97,12 @@ class RiddleGenerator:
         else:
             raise ValueError(f"Unsupported mode: {self.mode}. Please choose either 'local' or 'chatgpt'.")
     
-    def _generateSystemPrompt(self, language="English", style="Medieval", difficulty=50):
+    def _generateSystemPrompt(self, language="English", style="Medieval", difficulty=50, story_context=None):
+        
+        if isinstance(story_context, str) and story_context.strip():
+            context_prompt = f" following the ongoing story context: {story_context.strip()}"
+        else:
+            context_prompt = "."
 
         try:
             difficulty = float(difficulty)
@@ -106,14 +111,14 @@ class RiddleGenerator:
             print("[PuzzleAgent]: Invalid difficulty input, defaulting to 50.0")
         
         if difficulty < 33.3:
-            diff_prompt = "Write a simple and clear riddle suitable for beginners or young audiences (around 10 years old)."
+            diff_prompt = "Write a simple and clear riddle suitable for beginners or young audiences (around 10 years old)"
         elif difficulty < 66.6:
-            diff_prompt = "Write a moderately challenging riddle with some use of rhetorical devices, but still solvable based on the context."
+            diff_prompt = "Write a moderately challenging riddle with some use of rhetorical devices, but still solvable based on the context"
         else:
-            diff_prompt = "Write a challenging and abstract riddle that relies on metaphor and indirect clues, avoiding clear landmark descriptions."
+            diff_prompt = "Write a challenging and abstract riddle that relies on metaphor and indirect clues, avoiding clear landmark descriptions"
 
         system_prompt = f"""
-            Written in {language}. You are a master riddle writer. {diff_prompt} Do not include any extra explanations or mention the landmark's name explicitly.
+            Written in {language}. You are a master riddle writer. {diff_prompt} {context_prompt}. Do not include any extra explanations or mention the landmark's name explicitly.
             
             Use the following details as reference:
             \\begin{{quote}}
@@ -128,11 +133,11 @@ class RiddleGenerator:
             """
         return system_prompt
 
-    def saveToFile(self, filename):
-        os.makedirs("outputfiles", exist_ok=True)
-        path = os.path.join("outputfiles", filename)
-        with open(path, 'w', encoding="utf-8") as f:
-            json.dump(self.meta, f, ensure_ascii=False, indent=4)
+    # def saveToFile(self, filename):
+    #     os.makedirs("outputfiles", exist_ok=True)
+    #     path = os.path.join("outputfiles", filename)
+    #     with open(path, 'w', encoding="utf-8") as f:
+    #         json.dump(self.meta, f, ensure_ascii=False, indent=4)
 
 if __name__ == "__main__":
     generator = RiddleGenerator()
