@@ -14,16 +14,17 @@ class StoryWeaver:
         #     ]
         # }
 
-        if not session_id or session_id not in self.sessions:
+        if not session_id:
             session_id = str(uuid.uuid4())
-            state = {
-                "total_slots": len(puzzle_pool),
-                "slot_index": 0,
-                "beat_plan": self._generate_beat_plan(len(puzzle_pool)),
-                "riddle_history": [],
-                "puzzle_pool": puzzle_pool
-            }
-            self.sessions[session_id] = state
+            
+        state = {
+            "total_slots": len(puzzle_pool),
+            "slot_index": 0,
+            "beat_plan": self._generate_beat_plan(len(puzzle_pool)),
+            "riddle_history": [],
+            "puzzle_pool": puzzle_pool
+        }
+        self.sessions[session_id] = state
         
         return session_id
     
