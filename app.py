@@ -4,6 +4,7 @@ from story_weaver import StoryWeaver
 app = Flask(__name__)
 
 story_weaver = StoryWeaver()
+# test 
 # @app.route("/generate-riddle", methods=["POST"])
 # def generate_riddle():
 #     language = "монгол хэл"
