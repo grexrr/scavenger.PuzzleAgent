@@ -2,7 +2,7 @@
 
 ## Module Objective
 
-![Module Processing Pipeline](./images/riddle_generator.png)
+![Module Processing Pipeline](./images/game_process_riddle.png)
 
 This module provides the real time riddle generation service for main ScavengerHunt back-end based on landmark meta-data.
 
