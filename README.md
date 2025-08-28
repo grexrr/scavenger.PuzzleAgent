@@ -2,14 +2,165 @@
 
 ## Module Objective
 
-This module provides the real time riddle generation function based on landmark meta-data.
+![Module Processing Pipeline](./images/riddle_generator.png)
+
+This module provides the real time riddle generation service for main ScavengerHunt back-end based on landmark meta-data.
+
+
+![Internal Logic](./images/riddle_generator.png)
+The riddle_generator.png image illustrates the riddle generation process. Below is a brief explanation of each part shown in the image:
+- **Backend**: Retrieves landmark metadata from the backend.
+- **Build System Prompt**: Constructs the system prompt, including story background and task information.
+- **Build User Prompt**: Constructs the user prompt based on user input and landmark information.
+- **Calculate Riddle Beat**: Calculates the riddle beat, determining the rhythm and structure of the riddle.
+- **Decode Difficulty**: Decodes the difficulty index, adjusting the complexity of the riddle.
+- **User Customization**: Allows user customization options, enabling users to adjust the riddle's style and language.
+- **Compose Story Context**: Composes the story context, ensuring the riddle aligns with the overall storyline.
+- **Generate Riddle**: Finally generates the riddle, combining system and user prompts.
+
+
+### Dependencies
+
+Install required Python packages:
+
+```bash
+pip install -r requirements.txt
+```
+
+**Core dependencies:**
+- `Flask==3.1.1` - Web framework for API endpoints
+- `pymongo==4.13.2` - MongoDB client for landmark metadata access
+- `python-dotenv==1.1.1` - Environment variable management
+- `openai==1.97.1` - OpenAI API client (for ChatGPT mode)
+- `lmstudio==1.4.1` - LM Studio client (for local LLM mode)
+
+**Note:** The full `requirements.txt` includes all transitive dependencies for reproducible builds.
+
+### Environment Configuration
+
+Create a `.env` file in the project root with:
+
+```bash
+# MongoDB Configuration
+MONGO_URL=mongodb://localhost:27017
+MONGO_DATABASE=scavengerhunt
+MONGO_COLLECTION=landmark_metadata
+
+# OpenAI Configuration (for ChatGPT mode)
+OPENAI_API_KEY=your_openai_api_key_here
+
+# LM Studio Configuration (for local mode)
+LMSTUDIO_BASE_URL=http://localhost:1234/v1
+LMSTUDIO_MODEL=llama-3.2-1b-instruct
+
+# Flask Configuration
+FLASK_PORT=5001
+FLASK_DEBUG=true
+FLASK_HOST=0.0.0.0
+
+# Model Selection (local or chatgpt)
+DEFAULT_MODEL=local
+```
+
+Ensure that the `.env` file is correctly configured with your MongoDB, OpenAI, and LM Studio settings. The Flask application will use these settings to connect to the necessary services and run the server.
+
+### Launch Instructions
+
+1. **Start MongoDB** (if using local instance):
+   ```bash
+   mongod --dbpath /path/to/your/db
+   ```
+
+2. **Start LM Studio** (if using local model):
+   - Launch LM Studio application
+   - Load `llama-3.2-1b-instruct` model
+   - Start local server on `http://localhost:1234`
+
+3. **Activate virtual environment**:
+   ```bash
+   source .venv/bin/activate
+   ```
+
+4. **Start the Flask application**:
+   ```bash
+   python app.py
+   ```
+
+   **Alternative: Use the startup script** (recommended):
+   ```bash
+   chmod +x start.sh
+   ./start.sh
+   ```
+
+### API Endpoints
+
+The service runs on **port 5001** by default and provides:
+
+- `POST /generate-riddle` - Generate riddles with story continuity
+- `POST /reset-session` - Reset session state
+
+### API Usage Example
+
+```bash
+curl -X POST http://localhost:5001/generate-riddle \
+  -H "Content-Type: application/json" \
+  -d '{
+    "sessionId": "unique-session-123",
+    "landmarkId": "686fe2fd5513908b37be306d",
+    "language": "English",
+    "style": "Medieval",
+    "difficulty": 50,
+    "puzzlePool": ["686fe2fd5513908b37be306d", "686fe2fd5513908b37be306f"]
+     }'
+```
+
+### Troubleshooting
+
+**Common Issues:**
+
+1. **MongoDB Connection Failed**
+   ```
+   pymongo.errors.ServerSelectionTimeoutError
+   ```
+   - Ensure MongoDB is running: `brew services start mongodb-community` (macOS) or `sudo systemctl start mongod` (Linux)
+   - Check MongoDB URL in `.env` file
+   - Verify database contains `landmark_metadata` collection
+
+2. **LM Studio Connection Failed**
+   ```
+   lmstudio.exceptions.ConnectionError
+   ```
+   - Start LM Studio application
+   - Load the `llama-3.2-1b-instruct` model
+   - Enable local server in LM Studio settings
+
+3. **OpenAI API Errors**
+   ```
+   openai.error.AuthenticationError
+   ```
+   - Verify `OPENAI_API_KEY` in `.env` file
+   - Check API key permissions and billing status
+
+4. **Port Already in Use**
+   ```
+   OSError: [Errno 48] Address already in use
+   ```
+   - Change port in `app.py`: `app.run(port=5002)`
+   - Kill existing process: `lsof -ti:5001 | xargs kill -9`
+
+5. **Missing Dependencies**
+   ```
+   ModuleNotFoundError: No module named 'flask'
+   ```
+   - Activate virtual environment: `source .venv/bin/activate`
+   - Install dependencies: `pip install -r requirements.txt`
 
 ---
 
 ## Dev Log
 
 ### Jun. 2 2025
-#### Generation Layer – Local LLM-Based Riddle Production
+#### Generation Layer - Local LLM-Based Riddle Production
 
 - Implemented a standalone `RiddleGenerator` class that loads metadata from the `landmark_metadata` MongoDB collection and generates riddles using a local `llama-3.2-1b-instruct` model.
     
@@ -46,7 +197,7 @@ The riddle should be concise, engaging, and reflect a {style} tone.
 ```
 - The generated riddle is stored in the instance variable `.riddle` and returned to the calling layer.   
 
-#### API Layer – Flask-Based Microservice Integration
+#### API Layer - Flask-Based Microservice Integration
 
 - Created `app.py` as a lightweight HTTP wrapper around the `RiddleGenerator` class. 
 - Exposed a single POST route `/generate-riddle`, which:  
@@ -75,7 +226,7 @@ def generate_riddle():
     python app.py
     ```
 
-#### Output Format – Direct Riddle JSON
+#### Output Format - Direct Riddle JSON
 
 The riddle API produces a clean, minimal JSON object suitable for direct consumption by frontend or game clients:
 
@@ -109,12 +260,12 @@ This architecture supports future enhancements such as multilingual riddles, use
 
 ### Jun. 14 2025
 
-#### Epistemic Layer – Initial Planning Integration
+#### Epistemic Layer - Initial Planning Integration
 
 * Introduced two foundational classes:
 
   * `EpistemicStateManager`: models player knowledge by tracking solved landmark IDs and extracting semantic themes.
-  * `EpistemicPlanner`: evaluates the novelty of a landmark by comparing its metadata to the player’s known types and topics.
+  * `EpistemicPlanner`: evaluates the novelty of a landmark by comparing its metadata to the player's known types and topics.
 
 * The planner returns a JSON object indicating:
 
@@ -138,7 +289,7 @@ This architecture supports future enhancements such as multilingual riddles, use
 
 ### Jun. 19 2025
 
-#### Scoring Layer – ELO Difficulty Modeling (Under Development)
+#### Scoring Layer - ELO Difficulty Modeling (Under Development)
 
 * Created initial prototype in `elo_calculator_demo.py` to simulate adaptive scoring based on player-landmark interaction.
 
@@ -166,110 +317,24 @@ This architecture supports future enhancements such as multilingual riddles, use
   * `PuzzleManager`: to support difficulty-based target selection.
   * `EpistemicPlanner`: to leverage uncertainty in knowledge tracking and goal planning.
 
----
-
-### Jun. 23 2025
-
-This section focuses on designing and evaluating numerical behaviors of the rating system. By simulating player interactions and analyzing score convergence, we aim to validate the model's mathematical stability and performance under varying conditions.
-
-#### First Round Test
-
-##### Core Test Parameters
-
-```python
-ITERATIONS = 1000                 # Enough to observe convergence
-TIME_LIMIT_MINUTES = 30           # Realistic challenge time – medium difficulty
-TIME_USED_CASES = 10              # Time used (minutes) – reasonable game length
-BENCHMARK_UNCERTAINTY = 0.5       # Benchmark uncertainty – Glicko/CAP standard
-CORRECT = True
-```
-
-##### Initial Rating Setup
-
-```python
-testPlayer1.rating = -1.5       # Initial player rating – lowest convergence bound
-testLandmark1.rating = 1.5      # Initial landmark rating – highest convergence bound
-```
-
-This setup introduces a **skill gap**, requiring the player to improve to match the challenge level.
-
-
-##### Test Logic Design
-
-- **Goal**: Verify that with repeated correct answers, player and landmark ratings converge to a reasonable range  
-- **Method**: Fix `correct=True` to simulate consistent player success  
-- **Expected**: Player rating should increase, landmark rating should decrease, eventually reaching balance
-
-
-##### Test Objectives
-
-1. **Convergence Verification**: Ensure the rating system stabilizes after repeated interactions  
-2. **Balance Check**: Confirm the relative changes in player and landmark ratings are reasonable  
-3. **Numerical Stability**: Ensure updates do not cause abnormal fluctuations  
-4. **HSHS Model Validation**: Test correctness of the time-sensitive rating function
-
-
-##### Test Results
-
-![Benchmark Test 1: 10 Minutes](./figure/Convergence%20with%20Repeated%20Correct%20Answers.png)
-
-**Based on a scenario where the riddle time limit is 30 minutes, and the player solves it in 10 minutes:**
-
-- Convergence point: ≈ ±1.48 → visible scores ≈ 64.8% / 35.2%  
-Even though the initial skill gap was 3.0 (-1.5 ↔ +1.5), the system quickly pushes the player into the "solvable" zone.
-
-- Per-game rating gain: around +0.03 internal rating (~ +0.3 visible points) in the first 20 rounds, then gradually slows down.  
-To accelerate early learning, consider increasing `K` to ~0.015–0.02.
-
-
-#### Second Round Test
-
-Adjust the variable `TIME_USED_CASES` to observe rating convergence under different time usage conditions.
-
-```python
-ITERATIONS = 1000
-TIME_LIMIT_MINUTES = 30                     # minutes   
-BENCHMARK_UNCERTAINTY = 0.5                 # Glicko / CAP model uncertainty benchmark values
-TIME_USED_CASES = [0.1, 10, 20, 29.9]       # Test convergence under various solve times
-CORRECT = True
-```
-
-Uncertainty control (frozen uncertainty) and dynamic K-factor remain fixed to isolate time effects.
-
-
-##### Test Results
-
-![Benchmark Test 1: 10 Minutes](./figure/Convergence%20under%20Different%20Time%20Used.png)
-
-$\Delta r = K \cdot \left[ \underbrace{\text{HSHS}(t)}_{\text{Time-performance factor}} - \underbrace{E(HSHS)}_{\text{Expectation based on rating gap}} \right]$
-
-When `t_used` is **fixed** (e.g. always 29 minutes), then $HSHS_t$ is a constant:
-
-If the player continues to solve correctly => $E_{HSHS} \rightarrow HSHS$ => $\Delta r \rightarrow 0$,  
-meaning the system has converged and rating changes stabilize.
-
-**Conclusion:**  
-Time mainly controls the **magnitude of Δr** (convergence speed), **not** the final rating limit.  
-CAP or similar mechanisms may be necessary to handle extreme cases.
 
 ---
 
 ### Aug. 11 2025
 
+#### **Step 1 - Extend RiddleGenerator with story\_context Support**
 
-#### **Step 1 – Extend RiddleGenerator with story\_context Support**
-
-**Objective**: 让生成器能接收 `story_context`（包含 beat\_tag 和 previous\_riddles）并在 prompt 中使用。
+**Objective**: Enable the generator to accept `story_context` (including beat\_tag and previous\_riddles) and use it in the prompt.
 
 **Current State**:
 
-* `generateRiddle()` 已经支持 `story_context` 参数：
+* `generateRiddle()` already supports `story_context` parameter:
 
 ```python
 def generateRiddle(self, language="English", style="medieval", difficulty=50, story_context=None):
 ```
 
-* `_generateSystemPrompt()` 已加入：
+* `_generateSystemPrompt()` has been added:
 
 ```python
 if isinstance(story_context, str) and story_context.strip():
@@ -278,21 +343,21 @@ else:
     context_prompt = "."
 ```
 
-* backward-compatible：`story_context` 为 None 时，走原始逻辑。
+* backward-compatible: when `story_context` is None, follows original logic.
 
 **Next Action**:
 
-* 增强 story\_context 的 prompt 引导性（明确要求承接前文、推进情节）。
+* Enhance the prompt guidance of story\_context (explicitly require continuation of previous text and plot progression).
 
 ---
 
-#### **Step 2 – Implement StoryWeaver as Session Manager**
+#### **Step 2 - Implement StoryWeaver as Session Manager**
 
-**Objective**: 管理一局游戏的多谜语故事进度，内部维护上下文，API 保持单一 `/generate-riddle`。
+**Objective**: Manage the multi-riddle story progress of a game session, maintain context internally, and keep the API as a single `/generate-riddle` endpoint.
 
 **Current State**:
 
-* 内存结构：
+* Memory structure:
 
 ```python
 self.sessions[session_id] = {
@@ -304,22 +369,22 @@ self.sessions[session_id] = {
 }
 ```
 
-* `start_episode()`：
+* `start_episode()`:
 
-  * 若 `session_id` 不存在 → 新建
-  * 若存在 → 复用
-  * 返回 `session_id`
-* `serve_riddle()`：
+  * If `session_id` does not exist → create new
+  * If exists → reuse
+  * Return `session_id`
+* `serve_riddle()`:
 
-  * 取当前 beat\_tag 和 previous\_riddles
-  * 生成 story\_context（自然语言）
-  * 调 `RiddleGenerator.generateRiddle()`
-  * 保存到 riddle\_history，slot\_index++
+  * Get current beat\_tag and previous\_riddles
+  * Generate story\_context (natural language)
+  * Call `RiddleGenerator.generateRiddle()`
+  * Save to riddle\_history, slot\_index++
 
 
-#### **Step 3 – API Integration**
+#### **Step 3 - API Integration**
 
-**Objective**: 用一个 `/generate-riddle` 接口完成新局 & 续局逻辑。
+**Objective**: Complete new game & continuation logic with a single `/generate-riddle` interface.
 
 **Current State**:
 
@@ -335,11 +400,11 @@ def generate_riddle():
     })
 ```
 
-* 第一次调用传 `puzzle_pool`（可含多个 landmarkId），返回第一题 + `session_id`
-* 后续调用仅传 `session_id` → StoryWeaver 自动生成下一题
+* First call passes `puzzle_pool` (can contain multiple landmarkIds), returns first riddle + `session_id`
+* Subsequent calls only pass `session_id` → StoryWeaver automatically generates next riddle
 
 
-#### **Step 4 – Testing & Validation**
+#### **Step 4 - Testing & Validation**
 
 **Test Sequence with 3 Landmark IDs**:
 
@@ -398,30 +463,30 @@ Behold, where history and learning wed.
 
 **Observations**
 
-* 三题顺序正确，但故事上下文衔接感不强
-* 需要增强 prompt 对 “承接前文、推进情节” 的引导
-* 未来可在 story\_context 中加入：
+* The sequence of three riddles is correct, but the story context connection is not strong
+* Need to enhance prompt guidance for "continuing previous text and advancing plot"
+* Future additions to story\_context could include:
 
-  * 全局 motif
-  * beat\_tag 对应的叙事补充说明
-  * 上一题重要元素（link\_to）
+  * Global motif
+  * Narrative supplementary explanations corresponding to beat\_tag
+  * Important elements from previous riddle (link\_to)
 
-好的，我帮你按你的要求整理 **Round 2** 内容，先写本轮的代码更改，再附上刚刚那组谜题，格式保持分级一致：
+Alright, I'll help you organize the **Round 2** content as requested, first writing the code changes for this round, then attaching the riddle set we just had, maintaining consistent formatting hierarchy:
 
 ---
 
 ##### **Round 2**
 
-**代码更改**
+**Code Changes**
 
-* 在 `serve_riddle()` 中新增 `story_context` 构造逻辑，包含：
+* Added new `story_context` construction logic in `serve_riddle()`, including:
 
-  * **全局 story seed**（`state['story_seed']`）
-  * **beat\_tag 对应叙事功能说明**（opening / development / ending）
-  * 明确要求“使用当前地标的特征进行全新描写”以避免重复用词
-  * 保留 `Previous riddles` 摘要用于上下文承接
-* 在 `_generateSystemPrompt()` 中直接使用传入的 `story_context`，去掉冗余 `context_prompt` 变量，确保 narrative arc 信息集中在一个地方维护
-* 这样第一条谜语会引入主线任务，后续谜语会引用并推进任务情节，同时保持用词和 imagery 的新鲜感
+  * **Global story seed** (`state['story_seed']`)
+  * **Narrative function descriptions corresponding to beat\_tag** (opening / development / ending)
+  * Explicit requirement to "use current landmark's characteristics for completely new descriptions" to avoid repetitive wording
+  * Retain `Previous riddles` summary for context continuation
+* In `_generateSystemPrompt()` directly use the passed `story_context`, remove redundant `context_prompt` variable, ensure narrative arc information is maintained in one centralized place
+* This way the first riddle will introduce the main quest, subsequent riddles will reference and advance the quest plot, while maintaining fresh wording and imagery
 
 ---
 
@@ -470,16 +535,16 @@ In halls of echoes, past whispers the truth.
 
 **Observations**
 
-三题顺序与 beat_tag 匹配，剧情结构符合 opening → development → ending 节奏
+The sequence of three riddles matches beat_tag, plot structure follows opening → development → ending rhythm
 
-连续性较之前提升：三条谜语都围绕同一类背景（学术、艺术、信仰）展开，并保持一致的故事氛围
+Continuity improved compared to previous: all three riddles revolve around the same type of background (academic, artistic, religious) and maintain a consistent story atmosphere
 
-用词多样化，没有生硬重复前一题的措辞，但核心意象（知识、信仰、艺术）得以保留
+Diversified wording, no rigid repetition of previous riddle's phrasing, but core imagery (knowledge, faith, art) is preserved
 
-仍可进一步优化：
+Can be further optimized:
 
-在 opening 中直接埋下“任务起因”或“核心物件”增加悬念
+In opening, directly embed "quest motivation" or "core artifact" to add suspense
 
-在 development 中引入剧情转折或意外线索，增加张力
+In development, introduce plot twists or unexpected clues to increase tension
 
-在 ending 中明确揭示任务结局，增强完成感
+In ending, clearly reveal quest conclusion to enhance sense of completion

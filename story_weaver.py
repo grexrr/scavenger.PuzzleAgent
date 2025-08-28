@@ -40,6 +40,9 @@ class StoryWeaver:
     def serve_riddle(self, language, style, difficulty, landmark_id, session_id=None):
         
         state = self.sessions[session_id]
+        print("serve_riddle: session_id=", session_id)
+        print("state=", self.sessions.get(session_id))
+
         slot_index = state["slot_index"]
         if slot_index >= len(state["puzzle_pool"]):
             return {
@@ -49,6 +52,7 @@ class StoryWeaver:
         
         beat_tag = state["beat_plan"][slot_index]
 
+        
         prev_summary = self._format_previous_riddles(state["riddle_history"])
         # story_context = f"Current story beat: {beat_tag}\nPrevious riddles: \n{prev_summary}"
         

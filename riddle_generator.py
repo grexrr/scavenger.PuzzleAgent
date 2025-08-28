@@ -5,28 +5,27 @@ import openai
 from pymongo import MongoClient
 from dotenv import load_dotenv
 
+# Load environment variables
+load_dotenv()
 
 class RiddleGenerator:
-    def __init__(self, model="local", mongo_url="mongodb://localhost:27017") -> None:
-        # self.model = lms.llm(model)
-        self.mongo_url = mongo_url
+    def __init__(self, model=None, mongo_url=None) -> None:
+        self.mongo_url = mongo_url or os.getenv('MONGO_URL')
         self.meta = {}
-        self.mode = model.lower()
+        self.mode = model.lower() if model else os.getenv('DEFAULT_MODEL')
         self.riddle = ""
 
         if self.mode == "local":
-            self.model = lms.llm("llama-3.2-1b-instruct") 
+            self.model = lms.llm(os.getenv('LMSTUDIO_MODEL'))
         elif self.mode == "chatgpt":
-            from dotenv import load_dotenv
-            load_dotenv()
             openai.api_key = os.getenv("OPENAI_API_KEY")
-            self.model = openai  
+            self.model = openai
         else:
-            raise ValueError(f"[RiddleGenerator] Unknown model mode: {model}")
+            raise ValueError(f"[RiddleGenerator] Unknown model mode: {self.mode}")
 
     def loadMetaFromDB(self, landmark_id):
         client = MongoClient(self.mongo_url)
-        collection = client["scavengerhunt"]["landmark_metadata"]
+        collection = client[os.getenv('MONGO_DATABASE')][os.getenv('MONGO_COLLECTION')]
         self.meta = collection.find_one({"landmarkId": landmark_id})
         if self.meta and "_id" in self.meta:
             self.meta["_id"] = str(self.meta["_id"])  # convert ObjectID to string

@@ -1,6 +1,12 @@
-from flask import Flask, request, jsonify  
+from flask import Flask, request, jsonify
 from riddle_generator import RiddleGenerator
 from story_weaver import StoryWeaver
+import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
+
 app = Flask(__name__)
 
 story_weaver = StoryWeaver()
@@ -33,7 +39,7 @@ def generate_riddle():
     style = data.get("style", "Medieval")
     difficulty = data.get("difficulty")
     puzzle_pool = data.get("puzzlePool", [])  # backend not sent yet
-    
+
     if not session_id:
         print("No session_id")
         return jsonify({"error": "MISSING_SESSION_ID"}), 400
@@ -84,7 +90,5 @@ def reset_session():
     else:
         return jsonify({"status": "error", "message": f"Session {sid} not found"}), 404
 
-
-
 if __name__ == "__main__":
-    app.run(port=5001)
+    app.run(host=os.getenv('FLASK_HOST'), port=int(os.getenv('FLASK_PORT')), debug=os.getenv('FLASK_DEBUG') == 'true')
