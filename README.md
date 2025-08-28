@@ -228,7 +228,7 @@ def generate_riddle():
 
 #### Output Format - Direct Riddle JSON
 
-The riddle API produces a clean, minimal JSON object suitable for direct consumption by frontend or game clients:
+The riddle API produces a JSON object suitable for direct consumption by frontend or game clients:
 
 ```json
 {
@@ -293,8 +293,7 @@ This architecture supports future enhancements such as multilingual riddles, use
 
 * Created initial prototype in `elo_calculator_demo.py` to simulate adaptive scoring based on player-landmark interaction.
 
-> **Note**
-> This module serves as a testing sandbox for game balancing and numerical behavior visualization. The final production version will be fully integrated into the main Spring Boot application as part of the core game logic.
+This module serves as a testing sandbox for game balancing and numerical behavior visualization. The final production version will be fully integrated into the main Spring Boot application as part of the core game logic.
 
 * Implemented key components:
 
@@ -316,7 +315,6 @@ This architecture supports future enhancements such as multilingual riddles, use
 
   * `PuzzleManager`: to support difficulty-based target selection.
   * `EpistemicPlanner`: to leverage uncertainty in knowledge tracking and goal planning.
-
 
 ---
 
@@ -470,8 +468,6 @@ Behold, where history and learning wed.
   * Global motif
   * Narrative supplementary explanations corresponding to beat\_tag
   * Important elements from previous riddle (link\_to)
-
-Alright, I'll help you organize the **Round 2** content as requested, first writing the code changes for this round, then attaching the riddle set we just had, maintaining consistent formatting hierarchy:
 
 ---
 
