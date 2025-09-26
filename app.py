@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
-from riddle_generator import RiddleGenerator
+# from riddle_generator import RiddleGenerator
+from datetime import datetime
 from story_weaver import StoryWeaver
 import os
 from dotenv import load_dotenv
@@ -10,24 +11,6 @@ load_dotenv()
 app = Flask(__name__)
 
 story_weaver = StoryWeaver()
-# test 
-# @app.route("/generate-riddle", methods=["POST"])
-# def generate_riddle():
-#     language = "монгол хэл"
-#     style = "Devilish"
-#     data = request.get_json()
-#     lm_id = data.get("landmarkId")
-#     difficulty = data.get("difficulty")
-#     print(f"[Python Flask] Received landmarkId {lm_id}: difficulty {difficulty}.")
-
-    
-#     generator = RiddleGenerator(model="chatgpt")
-#     generator.loadMetaFromDB(lm_id).generateRiddle(language, style, difficulty)
-#     return jsonify({
-#         "status": "ok",
-#         "riddle": generator.riddle # temporary testing
-#     })
-
 
 @app.route("/generate-riddle", methods=["POST"])
 def generate_riddle():
@@ -89,6 +72,25 @@ def reset_session():
         return jsonify({"status": "ok", "message": f"Session {sid} reset"})
     else:
         return jsonify({"status": "error", "message": f"Session {sid} not found"}), 404
+    
+@app.route("/health", methods=["POST"])
+def isHealthy():
+    try:
+        if story_weaver is None:
+            return jsonify({"status": "unhealthy", "error": "StoryWeaver not initialized"}), 500
+        
+        return jsonify({
+            "status": "healthy",
+            "timestamp": datetime.now().isoformat() + "Z",
+            "version": "1.0.0"  
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            "status": "unhealthy", 
+            "error": str(e)
+        }), 500
+    
 
 if __name__ == "__main__":
     app.run(host=os.getenv('FLASK_HOST'), port=int(os.getenv('FLASK_PORT')), debug=os.getenv('FLASK_DEBUG') == 'true')
