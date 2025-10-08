@@ -544,3 +544,53 @@ In opening, directly embed "quest motivation" or "core artifact" to add suspense
 In development, introduce plot twists or unexpected clues to increase tension
 
 In ending, clearly reveal quest conclusion to enhance sense of completion
+
+
+### Sept. 26 2025
+
+**Objective**: Containerize PuzzleAgent and perform end-to-end verification of MongoDB communication and health status on the local machine using runtime configuration injection.
+
+#### Completed
+
+- **Dockerfile and Image**: Created Dockerfile based on `python:3.12-slim` and built image: `puzzle-agent:local`
+- **Runtime Configuration**: Used `.env` for runtime configuration injection (`.env` not committed to protect secrets)
+- **Network Integration**: Established local container network and connected existing MongoDB container (container name: `mongo`). PuzzleAgent accesses MongoDB via container name resolution: `MONGO_URL=mongodb://mongo:27017`
+- **Port Mapping**: Mapped ports using `-p 5001:5000`. Flask listens on `0.0.0.0:5000`; external access via `localhost:5001`
+- **Health Check**: `curl -X POST http://localhost:5001/health` returns `{"status":"healthy", ...}` (timestamp: 2025-09-26T18:43:07Z)
+
+#### Conclusion
+
+✅ **Image**: Dependencies installed, entry script, and exposed ports working correctly  
+✅ **Runtime Configuration**: Configuration injection works (no `OPENAI_API_KEY` baked into image)  
+✅ **Inter-container Network**: Communication via service name instead of localhost
+
+#### Pending Tasks / Risks
+
+- **LandmarkProcessor**: Not yet containerized; needs port strategy and health check interface alignment
+- **Backend Configuration**: Microservice base URLs need to be configurable for switching between "local direct run" and "Compose/deployment" environments
+- **LM Studio Access**: If LM Studio runs on host, container access requires `host.docker.internal` (Linux may need manual add-host)
+
+#### Next Steps (Minimum Action List)
+
+**1. LandmarkProcessor Containerization and Integration**
+- Build image with same approach (suggest internal port 5000)
+- Run mapping: `-p 5002:5000` (avoid conflict with 5001)
+- Inject `.env.container` (Mongo: `mongodb://mongo:27017`; LM Studio/OPENAI same as PuzzleAgent)
+- Verify: `curl http://localhost:5002/health` should return 200
+
+**2. Backend Configuration Switching (Prepare for Compose)**
+- **Local Direct Run**: `PUZZLE_AGENT_URL=http://127.0.0.1:5001`, `LANDMARK_PROCESSOR_URL=http://127.0.0.1:5002`, `MONGODB_URI=mongodb://127.0.0.1:27017/...`
+- **Compose/Deployment**: `http://puzzle-agent:5000`, `http://landmark-processor:5000`, `mongodb://mongo:27017/...`
+
+**3. End-to-End Chain Verification**
+- Frontend → Backend `/api/...` → Two microservices → MongoDB
+
+**4. HTTPS External Access Verification**
+- Start backend (listen on `0.0.0.0:8080`)
+- Run: `ngrok http 8080`
+- Use mobile device to open ngrok HTTPS link, verify frontend and `/api` full flow
+
+**5. Deployment Repository Setup**
+- Create `docker-compose.yml` in deployment repository (use `image:` only, no `build:`)
+- Prepare `.env.template` (for deployer to fill `OPENAI_API_KEY`)
+- Optional script: `docker compose pull && docker compose up -d`, print ngrok link
