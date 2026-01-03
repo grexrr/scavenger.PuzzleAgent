@@ -1,7 +1,7 @@
 import os
 import json
 import lmstudio as lms
-import openai
+from openai import OpenAI
 from pymongo import MongoClient
 from dotenv import load_dotenv
 
@@ -18,8 +18,10 @@ class RiddleGenerator:
         if self.mode == "local":
             self.model = lms.llm(os.getenv('LMSTUDIO_MODEL'))
         elif self.mode == "chatgpt":
-            openai.api_key = os.getenv("OPENAI_API_KEY")
-            self.model = openai
+            api_key = os.getenv("OPENAI_API_KEY")
+            if not api_key:
+                raise ValueError("[RiddleGenerator] OPENAI_API_KEY not found in environment variables")
+            self.model = OpenAI(api_key=api_key)
         else:
             raise ValueError(f"[RiddleGenerator] Unknown model mode: {self.mode}")
 
@@ -37,13 +39,17 @@ class RiddleGenerator:
         meta = self.meta.get("meta", {})
         description = meta.get("description", {})
 
-        if not description:
-            self.riddle = "No riddle generated"
-            return self
-
-        history = description.get("history", [])
-        architecture = description.get("architecture", [])
-        significance = description.get("significance", [])
+        # Check if description has any meaningful content
+        history = description.get("history", []) if description else []
+        architecture = description.get("architecture", []) if description else []
+        significance = description.get("significance", []) if description else []
+        
+        # If no description data available, use basic landmark info (name, city) as fallback
+        if not history and not architecture and not significance:
+            landmark_name = self.meta.get("name", "landmark")
+            city_name = self.meta.get("city", "city")
+            print(f"[PuzzleAgent] Warning: No description data for {landmark_name} in {city_name}. Using basic info as fallback.")
+            # Still proceed with generation using name and city info
 
         history_str = "history: " + ", ".join(history) if history else ""
         architecture_str = "architecture: " + ", ".join(architecture) if architecture else ""
@@ -53,8 +59,16 @@ class RiddleGenerator:
         if "wikipedia" in meta:
             reference = "reference:\n" + meta["wikipedia"]
         
+        # Fallback: use basic landmark info if no description data
+        basic_info = ""
+        if not history_str and not architecture_str and not significance_str:
+            landmark_name = self.meta.get("name", "")
+            city_name = self.meta.get("city", "")
+            if landmark_name and city_name:
+                basic_info = f"landmark: {landmark_name}, city: {city_name}"
+        
         # ========== prompt based on difficulty ==========   
-        user_prompt = "\n".join(filter(None, [history_str, architecture_str, significance_str, reference]))
+        user_prompt = "\n".join(filter(None, [history_str, architecture_str, significance_str, reference, basic_info]))
         system_prompt = self._generateSystemPrompt(language, style, difficulty, story_context) 
         
         # ========== response based on model selection ==========   

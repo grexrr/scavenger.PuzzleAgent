@@ -2,6 +2,7 @@
 .env
 env/
 venv/
+.venv/
 ENV/
 build/
 develop-eggs/
@@ -19,7 +20,6 @@ outputfiles/
 *.egg-info/
 .installed.cfg
 *.egg
-
 
 openaiAPI.txt
 enkboldAPI.txt
